@@ -1,0 +1,91 @@
+<head>
+    <title>Results - {{ title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-6">
+                <!-- Student Information -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Student Information</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        {% for key, value in results.student_info.items() %}
+                        <div class="text-sm">
+                            <span class="font-medium text-gray-900 dark:text-white">{{ key }}:</span>
+                            <span class="text-gray-600 dark:text-gray-300">{{ value }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- GPA Information -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">GPA Information</h2>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="font-medium text-gray-900 dark:text-white">Current GPA</div>
+                            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ results.GPA }}</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="font-medium text-gray-900 dark:text-white">Predictive GPA</div>
+                            <div class="text-3xl font-bold text-green-600 dark:text-green-400">{{ results.Predictive_GPA }}</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="font-medium text-gray-900 dark:text-white">Potential GPA</div>
+                            <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ results.Potential_GPA }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4">
+                    <form method="post" action="{{ url_for('recalculate') }}" class="w-1/2">
+                        <input type="hidden" name="username" value="{{ username }}">
+                        <input type="hidden" name="final_exam_min" value="{{ final_exam_min }}">
+                        <input type="hidden" name="final_exam_max" value="{{ final_exam_max }}">
+                        <button type="submit" class="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+                            Recalculate Predictive
+                        </button>
+                    </form>
+                    <a href="{{ url_for('index') }}" class="w-1/2">
+                        <button class="w-full bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
+                            Back to Login
+                        </button>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Right Column - Grades Table -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Grades</h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Course Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Course Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hours</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mark</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mark in %</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for grade in results.grades %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Course Code'] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Course Name'] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Hours'] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Mark'] }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Mark in %'] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
