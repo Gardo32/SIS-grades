@@ -5,3 +5,4 @@ psycopg2
 python-dotenv
 sv_ttk
 psycopg2-binary
+gunicorn
