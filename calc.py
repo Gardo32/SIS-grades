@@ -112,7 +112,7 @@ class ProgressCalculator:
 
     def calculate_predictive_gpa(self, grades_data, final_exam_min, final_exam_max):
         total_weighted_grades = 0
-        total_hours = 0
+        total_courses = 0
         for grade in grades_data:
             course_code = grade['Course Code']
             mark_string = grade['Mark']
@@ -129,15 +129,12 @@ class ProgressCalculator:
                 adjusted_grade = mark - estimated_mark + 40
             else:
                 continue
-            hours = self.get_course_hours(course_code)
-            if hours is None:
-                continue
-            weighted_grade = adjusted_grade * hours
+            weighted_grade = adjusted_grade
             total_weighted_grades += weighted_grade
-            total_hours += hours
-        if total_hours == 0:
+            total_courses += 1
+        if total_courses == 0:
             return 0
-        return total_weighted_grades / total_hours
+        return total_weighted_grades / total_courses
 
     def calculate_potential_gpa(self, grades_data):
         total_weighted_grades = 0
@@ -174,6 +171,9 @@ class ProgressCalculator:
         self.cursor.execute(query, (course_code,))
         result = self.cursor.fetchone()
         return result[0] if result else None
+
+    def clear_session(self):
+        self.session.cookies.clear()
 
 class ProgressViewer:
     def __init__(self, root):

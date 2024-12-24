@@ -10,6 +10,18 @@ calculator = ProgressCalculator()
 def index():
     return render_template("index.html", title="Login")
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        # Assuming you have a function to validate the user
+        if validate_user(username, password):
+            session["username"] = username
+            session["password"] = password
+            return redirect(url_for("profile"))
+    return render_template("login.html")
+
 @app.route("/calculate", methods=["POST"])
 def calculate():
     username = request.form["username"]
@@ -59,6 +71,22 @@ def recalculate():
     except Exception as e:
         flash(str(e), "error")
         return redirect(url_for("index"))
+
+@app.route("/logout")
+def logout():
+    session.pop("username", None)
+    session.pop("password", None)
+    calculator.clear_session()
+    return redirect(url_for("login"))
+
+@app.route("/profile")
+def profile():
+    if "username" in session:
+        username = session["username"]
+        # Fetch user data based on the username
+        user_data = get_user_data(username)
+        return render_template("profile.html", user=user_data)
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
     app.run(debug=True)

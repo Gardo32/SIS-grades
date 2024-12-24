@@ -1,0 +1,46 @@
+<head>
+    <title>{{ title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="max-w-md w-full p-6">
+            <div class="text-center mb-8">
+                <img src="{{ url_for('static', filename='Octocat.png') }}" class="w-24 h-24 mx-auto mb-4" alt="logo" />
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">NCST GPA Calculator</h1>
+            </div>
+
+            <form method="post" action="{{ url_for('calculate') }}" class="bg-white dark:bg-gray-800 shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+                <div class="mb-4">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="username">Username (NV Number):</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" id="username" name="username" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="password">Password:</label>
+                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="password" id="password" name="password" required>
+                </div>
+                <div class="flex gap-4 mb-6">
+                    <div class="w-1/2">
+                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="final_exam_min">Final Exam Min Error:</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="number" id="final_exam_min" name="final_exam_min" value="0" required>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="final_exam_max">Final Exam Max Error:</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="number" id="final_exam_max" name="final_exam_max" value="1" required>
+                    </div>
+                </div>
+                <button class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200" type="submit">Calculate</button>
+            </form>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <span class="block sm:inline">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</body>
+</html>
