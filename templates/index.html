@@ -1,46 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>{{ title }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NV Progress Viewer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="max-w-md w-full p-6">
-            <div class="text-center mb-8">
-                <img src="{{ url_for('static', filename='Octocat.png') }}" class="w-24 h-24 mx-auto mb-4" alt="logo" />
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">NCST GPA Calculator</h1>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div class="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div class="flex justify-end">
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 transition-colors duration-200">
+                    <i id="theme-toggle-dark-icon" class="fas fa-moon hidden"></i>
+                    <i id="theme-toggle-light-icon" class="fas fa-sun hidden"></i>
+                </button>
             </div>
-
-            <form method="post" action="{{ url_for('calculate') }}" class="bg-white dark:bg-gray-800 shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
-                <div class="mb-4">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="username">Username (NV Number):</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" id="username" name="username" required>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="password">Password:</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="password" id="password" name="password" required>
-                </div>
-                <div class="flex gap-4 mb-6">
-                    <div class="w-1/2">
-                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="final_exam_min">Final Exam Min Error:</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="number" id="final_exam_min" name="final_exam_min" value="0" required>
-                    </div>
-                    <div class="w-1/2">
-                        <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="final_exam_max">Final Exam Max Error:</label>
-                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="number" id="final_exam_max" name="final_exam_max" value="1" required>
-                    </div>
-                </div>
-                <button class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-200" type="submit">Calculate</button>
-            </form>
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                            <span class="block sm:inline">{{ message }}</span>
+            <div>
+                <h1 class="mt-6 text-center text-3xl font-extrabold">
+                    NV Progress Viewer
+                </h1>
+            </div>
+            <div class="mt-8 bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                <form action="/submit" method="POST" class="space-y-6">
+                    <div>
+                        <label for="nv_number" class="block text-sm font-medium">
+                            Enter NV number
+                        </label>
+                        <div class="mt-1">
+                            <input id="nv_number" name="nv_number" type="text" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200">
                         </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+                    </div>
+
+                    <div>
+                        <label for="headers" class="block text-sm font-medium">
+                            Enter headers
+                        </label>
+                        <div class="mt-1">
+                            <textarea id="headers" name="headers" rows="4" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% if error %}
+            <div class="mt-4 text-red-600 text-center bg-red-100 dark:bg-red-900 p-3 rounded-md">{{ error }}</div>
+            {% endif %}
         </div>
     </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        function updateIcons() {
+            if (document.documentElement.classList.contains('dark')) {
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
+            } else {
+                lightIcon.classList.add('hidden');
+                darkIcon.classList.remove('hidden');
+            }
+        }
+
+        updateIcons();
+
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            updateIcons();
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        });
+    </script>
 </body>
 </html>

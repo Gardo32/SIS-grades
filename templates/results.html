@@ -1,88 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Results - {{ title }}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress Results</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+    <script>
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-    <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Left Column -->
-            <div class="space-y-6">
-                <!-- Student Information -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Student Information</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        {% for key, value in results.student_info.items() %}
-                        <div class="text-sm">
-                            <span class="font-medium text-gray-900 dark:text-white">{{ key }}:</span>
-                            <span class="text-gray-600 dark:text-gray-300">{{ value }}</span>
-                        </div>
-                        {% endfor %}
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen transition-colors duration-300">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="flex justify-between items-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Progress Results</h1>
+            <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <i id="theme-toggle-dark-icon" class="fas fa-moon text-gray-800 dark:text-gray-200 text-xl hidden"></i>
+                <i id="theme-toggle-light-icon" class="fas fa-sun text-yellow-500 text-xl hidden"></i>
+            </button>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- GPA Cards -->
+            <div class="w-full lg:w-1/3 space-y-8">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Current GPA</h3>
+                    <p class="text-4xl font-bold text-gray-900 dark:text-white">{{ current_gpa }}</p>
+                    <div class="mt-4 w-full h-2 bg-primary-200 dark:bg-primary-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary-500 rounded-full" style="width: 100%;"></div>
                     </div>
                 </div>
-
-                <!-- GPA Information -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                    <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">GPA Information</h2>
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <div class="font-medium text-gray-900 dark:text-white">Current GPA</div>
-                            <div class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ results.GPA }}</div>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <div class="font-medium text-gray-900 dark:text-white">Predictive GPA</div>
-                            <div class="text-3xl font-bold text-green-600 dark:text-green-400">{{ results.Predictive_GPA }}</div>
-                        </div>
-                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <div class="font-medium text-gray-900 dark:text-white">Potential GPA</div>
-                            <div class="text-3xl font-bold text-purple-600 dark:text-purple-400">{{ results.Potential_GPA }}</div>
-                        </div>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Predictive GPA</h3>
+                    <p class="text-4xl font-bold text-yellow-600 dark:text-yellow-400">{{ predictive_gpa }}</p>
+                    <div class="mt-4 w-full h-2 bg-yellow-200 dark:bg-yellow-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-yellow-500 rounded-full" style="width: 75%;"></div>
                     </div>
                 </div>
-
-                <!-- Action Buttons -->
-                <div class="flex gap-4">
-                    <form method="post" action="{{ url_for('recalculate') }}" class="w-1/2">
-                        <input type="hidden" name="username" value="{{ username }}">
-                        <input type="hidden" name="final_exam_min" value="{{ final_exam_min }}">
-                        <input type="hidden" name="final_exam_max" value="{{ final_exam_max }}">
-                    </form>
-                    <a href="{{ url_for('logout') }}" class="w-full">
-                        <button class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200">
-                            Logout
-                        </button>
-                    </a>
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Potential GPA</h3>
+                    <p class="text-4xl font-bold text-blue-600 dark:text-blue-400">{{ potential_gpa }}</p>
+                    <div class="mt-4 w-full h-2 bg-blue-200 dark:bg-blue-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 rounded-full" style="width: 90%;"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Column - Grades Table -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Grades</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Course Code</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Course Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hours</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mark</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mark in %</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            {% for grade in results.grades %}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Course Code'] }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Course Name'] }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Hours'] }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Mark'] }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">{{ grade['Mark in %'] }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <!-- Course Table -->
+            <div class="w-full lg:w-2/3">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-gray-50 dark:bg-gray-700">
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Course Code</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Course Name</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Mark</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Mark in %</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                {% for item in data %}
+                                <tr class="text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium">{{ item.code }}</td>
+                                    <td class="px-6 py-4">{{ item.name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ item.mark }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <span class="mr-2 font-medium">{{ item.percentage }}</span>
+                                            <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
+                                                <div class="bg-primary-500 h-2 rounded-full" style="width: {{ item.percentage }};"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div class="mt-12 text-center space-x-4">
+            <a href="/" class="inline-flex items-center px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Form
+            </a>
+            <a href="/history" class="inline-flex items-center px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl shadow-md hover:shadow-lg transition-all duration-300">
+                <i class="fas fa-upload mr-2"></i>
+                Upload History
+            </a>
+        </div>
     </div>
+
+    <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+        function updateIcons() {
+            if (document.documentElement.classList.contains('dark')) {
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
+            } else {
+                lightIcon.classList.add('hidden');
+                darkIcon.classList.remove('hidden');
+            }
+        }
+
+        updateIcons();
+
+        themeToggleBtn.addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            updateIcons();
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        });
+    </script>
 </body>
 </html>
