@@ -7,10 +7,14 @@ import random
 import time  # Add this import at the top
 from werkzeug.utils import secure_filename
 import os
+from datetime import timedelta
+from functools import wraps
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+app.secret_key = 'your-secure-secret-key-here'  # Change this to a secure key
 
 # Create uploads directory if it doesn't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -240,17 +244,27 @@ def extract_history_data(html):
         print(f"Error extracting history data: {str(e)}")
         return None
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('index', error="Please login first"))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route('/upload')
+@login_required  # Add login protection
 def upload():
     return render_template('history_upload.html')
 
 @app.route('/history', methods=['GET', 'POST'])
+@login_required
 def history():
     if request.method == 'GET':
         return render_template('history_upload.html')
         
     if 'file' not in request.files:
-        return redirect(url_for('index', error=No file uploaded"))
+        return redirect(url_for('index', error="No file uploaded"))
     
     file = request.files['file']
     if file.filename == '':
@@ -286,6 +300,8 @@ def history():
 
 @app.route('/')
 def index():
+    if 'user_id' in session:
+        return redirect(url_for('results'))
     return render_template('index.html', error=request.args.get('error'))
 
 @app.route('/submit', methods=['POST'])
@@ -299,19 +315,33 @@ def submit():
     if not nv_number.startswith("nv") or len(nv_number) < 6:
         return redirect(url_for('index', error="Please enter a valid NV number (e.g., nvXXXXX)"))
 
-    session['nv_number'] = nv_number
+    # Try to fetch data first before setting session
+    result = send_payload(nv_number, headers)
+    if result.startswith("Error") or result.startswith("An error occurred"):
+        return redirect(url_for('index', error=result))
+
+    data = extract_table_data(result)
+    if not data:
+        return redirect(url_for('index', error="No data found. Please check your credentials."))
+
+    # Store both user_id and nv_number
+    session['user_id'] = nv_number
+    session['nv_number'] = nv_number  # Keep this for compatibility
     session['headers'] = headers
+    session.permanent = True
+
     return redirect(url_for('results'))
 
 @app.route('/results')
+@login_required
 def results():
-    nv_number = session.get('nv_number')
+    user_id = session.get('user_id')  # Changed from nv_number
     headers = session.get('headers')
 
-    if not nv_number or not headers:
+    if not user_id or not headers:
         return redirect(url_for('index'))
 
-    result = send_payload(nv_number, headers)
+    result = send_payload(user_id, headers)  # Using user_id instead of nv_number
 
     if result.startswith("Error") or result.startswith("An error occurred"):
         return redirect(url_for('index', error=result))
@@ -333,6 +363,65 @@ def results():
                              predictive_gpa=f"{predictive_gpa:.2f}")
     else:
         return redirect(url_for('index', error="No table data found in the response."))
+
+@app.route('/recalculate', methods=['POST'])
+@login_required
+def recalculate():
+    """Handle GPA recalculations based on edited marks"""
+    try:
+        data = request.get_json()
+        grades_data = []
+        
+        for grade in data['grades']:
+            grades_data.append({
+                'code': grade['code'],
+                'name': grade['name'],
+                'mark': grade['mark'],
+                'percentage': calculate_mark_percentage(grade['mark'])
+            })
+
+        current_gpa = calculate_gpa(grades_data)
+        potential_gpa = calculate_potential_gpa(grades_data)
+        predictive_gpa = calculate_predictive_gpa(grades_data)
+
+        return jsonify({
+            'current_gpa': f"{current_gpa:.2f}",
+            'potential_gpa': f"{potential_gpa:.2f}",
+            'predictive_gpa': f"{predictive_gpa:.2f}",
+            'percentages': {grade['code']: grade['percentage'] for grade in grades_data}
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+def calculate_mark_percentage(mark_str):
+    """Calculate percentage from mark string"""
+    match = re.match(r'(\d+)/(50|60|30)', mark_str)
+    if match:
+        mark = int(match.group(1))
+        max_grade = int(match.group(2))
+        
+        if max_grade == 50:
+            percentage = ((mark + 50) / 100) * 100
+        elif max_grade == 60:
+            percentage = ((mark + 40) / 100) * 100
+        elif max_grade == 30:
+            percentage = ((mark + 70) / 100) * 100
+        else:
+            return "0"
+            
+        return f"{percentage:.2f}"
+    return "0"
+
+@app.route('/logout')
+def logout():
+    # Properly handle logout
+    if 'user_id' in session:
+        session.clear()
+    return redirect(url_for('index'))
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
 # Don't forget to add a secret key for session management
 app.secret_key = 'your-secret-key-here'  # Change this to a secure secret key

@@ -41,10 +41,15 @@
     <div class="container mx-auto px-4 py-8 max-w-7xl">
         <div class="flex justify-between items-center mb-12">
             <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Progress Results</h1>
-            <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                <i id="theme-toggle-dark-icon" class="fas fa-moon text-gray-800 dark:text-gray-200 text-xl hidden"></i>
-                <i id="theme-toggle-light-icon" class="fas fa-sun text-yellow-500 text-xl hidden"></i>
-            </button>
+            <div class="flex items-center gap-4">
+                <a href="/logout" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-300">
+                    <i id="theme-toggle-dark-icon" class="fas fa-moon text-gray-800 dark:text-gray-200 text-xl hidden"></i>
+                    <i id="theme-toggle-light-icon" class="fas fa-sun text-yellow-500 text-xl hidden"></i>
+                </button>
+            </div>
         </div>
 
         <div class="flex flex-col lg:flex-row gap-8">
@@ -52,9 +57,12 @@
             <div class="w-full lg:w-1/3 space-y-8">
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-700">
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Current GPA</h3>
-                    <p class="text-4xl font-bold text-gray-900 dark:text-white">{{ current_gpa }}</p>
+                    <div class="flex items-center gap-2">
+                        <p class="text-4xl font-bold text-gray-900 dark:text-white">{{ current_gpa }}</p>
+                        <span class="text-4xl font-bold text-primary-500" id="edited-gpa"></span>
+                    </div>
                     <div class="mt-4 w-full h-2 bg-primary-200 dark:bg-primary-700 rounded-full overflow-hidden">
-                        <div class="h-full bg-primary-500 rounded-full" style="width: 100%;"></div>
+                        <div class="h-full bg-primary-500 rounded-full" id="current-gpa-bar" style="width: {{ current_gpa }}%;"></div>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-700">
@@ -77,7 +85,7 @@
             <div class="w-full lg:w-2/3">
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                     <div class="overflow-x-auto">
-                        <table class="w-full">
+                        <table class="w-full" id="gradesTable">
                             <thead>
                                 <tr class="bg-gray-50 dark:bg-gray-700">
                                     <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Course Code</th>
@@ -91,12 +99,18 @@
                                 <tr class="text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap font-medium">{{ item.code }}</td>
                                     <td class="px-6 py-4">{{ item.name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ item.mark }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <input type="text" 
+                                               class="w-20 px-2 py-1 rounded border dark:border-gray-600 bg-transparent"
+                                               value="{{ item.mark }}"
+                                               data-original="{{ item.mark }}"
+                                               onchange="recalculateGPAs(this)">
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <span class="mr-2 font-medium">{{ item.percentage }}</span>
+                                            <span class="mr-2 font-medium percentage-value">{{ item.percentage }}</span>
                                             <div class="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
-                                                <div class="bg-primary-500 h-2 rounded-full" style="width: {{ item.percentage }};"></div>
+                                                <div class="bg-primary-500 h-2 rounded-full percentage-bar" style="width: {{ item.percentage }};"></div>
                                             </div>
                                         </div>
                                     </td>
@@ -104,6 +118,11 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+                    </div>
+                    <div class="p-4 border-t dark:border-gray-700">
+                        <button onclick="resetValues()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            Reset Values
+                        </button>
                     </div>
                 </div>
             </div>
@@ -143,6 +162,61 @@
             updateIcons();
             localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         });
+
+        async function recalculateGPAs(input) {
+            const rows = document.querySelectorAll('#gradesTable tbody tr');
+            const grades = [];
+
+            rows.forEach(row => {
+                const code = row.querySelector('td:first-child').textContent;
+                const name = row.querySelector('td:nth-child(2)').textContent;
+                const mark = row.querySelector('input').value;
+                grades.push({ code, name, mark });
+            });
+
+            try {
+                const response = await fetch('/recalculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ grades }),
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                
+                // Update GPAs with raw percentage values
+                document.getElementById('edited-gpa').textContent = `→ ${data.current_gpa}%`;
+                document.getElementById('current-gpa-bar').style.width = `${data.current_gpa}%`;
+                document.querySelector('.text-yellow-600.dark\\:text-yellow-400').textContent = `${data.predictive_gpa}%`;
+                document.querySelector('.text-blue-600.dark\\:text-blue-400').textContent = `${data.potential_gpa}%`;
+
+                // Update percentages
+                rows.forEach(row => {
+                    const code = row.querySelector('td:first-child').textContent;
+                    const percentageSpan = row.querySelector('.percentage-value');
+                    const percentageBar = row.querySelector('.percentage-bar');
+                    const newPercentage = data.percentages[code];
+                    
+                    percentageSpan.textContent = `${newPercentage}%`;
+                    percentageBar.style.width = `${newPercentage}%`;
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function resetValues() {
+            const inputs = document.querySelectorAll('#gradesTable input');
+            inputs.forEach(input => {
+                input.value = input.dataset.original;
+            });
+            document.getElementById('edited-gpa').textContent = '';
+            recalculateGPAs();
+        }
     </script>
 </body>
 </html>

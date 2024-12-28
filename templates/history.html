@@ -63,10 +63,15 @@
     <div id="content" class="hidden container mx-auto px-4 py-8 max-w-7xl">
         <div class="flex justify-between items-center mb-12">
             <h1 class="text-4xl font-bold text-gray-900 dark:text-white">Grade History</h1>
-            <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-300">
-                <i id="theme-toggle-dark-icon" class="fas fa-moon text-gray-800 dark:text-gray-200 text-xl hidden"></i>
-                <i id="theme-toggle-light-icon" class="fas fa-sun text-yellow-500 text-xl hidden"></i>
-            </button>
+            <div class="flex items-center gap-4">
+                <a href="/logout" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-300">
+                    <i id="theme-toggle-dark-icon" class="fas fa-moon text-gray-800 dark:text-gray-200 text-xl hidden"></i>
+                    <i id="theme-toggle-light-icon" class="fas fa-sun text-yellow-500 text-xl hidden"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Student Info Card -->
