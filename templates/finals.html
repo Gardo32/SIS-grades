@@ -223,17 +223,103 @@
             bar.style.width = `${(parseFloat(value) / 4) * 100}%`;
         }
 
-        function getRandomError() {
+        function getRandomError(currentMark, maxFinal) {
             const minError = parseInt(document.getElementById('error-min').value) || 0;
-            const maxError = parseInt(document.getElementById('error-max').value) || 5;
-            return Math.floor(Math.random() * (maxError - minError + 1)) + minError;
+            const maxError = parseInt(document.getElementById('error-max').value) || 3;
+            const range = maxError - minError;
+            
+            // Normalize current mark to percentage based on coursework maximum
+            const courseWorkMax = maxFinal === 40 ? 60 : 50; // If finals is 40, coursework is 60, else 50
+            const markPercentage = (currentMark / courseWorkMax) * 100;
+            
+            // Calculate probability weights based on normalized mark percentage
+            const weights = new Array(range + 1).fill(0);
+            
+            if (markPercentage >= 90) {
+                if (maxFinal === 40) {
+                    // 60/40 split subjects
+                    weights[0] = 0.6;  // 60% chance of minimum error
+                    weights[1] = 0.25; // 25% chance of min+1
+                    weights[2] = 0.1;  // 10% chance of min+2
+                    weights[3] = 0.05; // 5% chance of maximum error
+                } else {
+                    // 50/50 split subjects
+                    weights[0] = 0.5;  // 50% chance of minimum error
+                    weights[1] = 0.3;  // 30% chance of min+1
+                    weights[2] = 0.15; // 15% chance of min+2
+                    weights[3] = 0.05; // 5% chance of maximum error
+                }
+            } else if (markPercentage >= 80) {
+                if (maxFinal === 40) {
+                    weights[0] = 0.4;
+                    weights[1] = 0.35;
+                    weights[2] = 0.15;
+                    weights[3] = 0.1;
+                } else {
+                    weights[0] = 0.3;
+                    weights[1] = 0.4;
+                    weights[2] = 0.2;
+                    weights[3] = 0.1;
+                }
+            } else if (markPercentage >= 70) {
+                if (maxFinal === 40) {
+                    weights[0] = 0.25;
+                    weights[1] = 0.35;
+                    weights[2] = 0.25;
+                    weights[3] = 0.15;
+                } else {
+                    weights[0] = 0.2;
+                    weights[1] = 0.3;
+                    weights[2] = 0.3;
+                    weights[3] = 0.2;
+                }
+            } else if (markPercentage >= 60) {
+                if (maxFinal === 40) {
+                    weights[0] = 0.15;
+                    weights[1] = 0.25;
+                    weights[2] = 0.35;
+                    weights[3] = 0.25;
+                } else {
+                    weights[0] = 0.1;
+                    weights[1] = 0.2;
+                    weights[2] = 0.4;
+                    weights[3] = 0.3;
+                }
+            } else {
+                if (maxFinal === 40) {
+                    weights[0] = 0.05;
+                    weights[1] = 0.15;
+                    weights[2] = 0.35;
+                    weights[3] = 0.45;
+                } else {
+                    weights[0] = 0.05;
+                    weights[1] = 0.15;
+                    weights[2] = 0.3;
+                    weights[3] = 0.5;
+                }
+            }
+
+            // Use weighted random selection
+            const random = Math.random();
+            let sum = 0;
+            for (let i = 0; i < weights.length; i++) {
+                sum += weights[i];
+                if (random < sum) {
+                    return minError + i;
+                }
+            }
+            return maxError; // fallback
         }
 
         function setPredictedMarks() {
             document.querySelectorAll('tbody tr').forEach(row => {
                 const finalsInput = row.querySelector('.finals');
+                const courseworkInput = row.querySelector('.coursework');
                 const maxMark = parseInt(finalsInput.max);
-                const error = getRandomError();
+                const currentMark = parseInt(courseworkInput.value) || 0;
+                
+                // Get error based on current coursework mark and finals maximum
+                const error = getRandomError(currentMark, maxMark);
                 finalsInput.value = Math.max(0, maxMark - error);
                 calculateTotal(row);
             });
