@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finals Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen font-sans transition-colors duration-200">
+    <div class="container mx-auto px-4 py-8">
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Left column -->
+            <div class="w-full lg:w-1/3 space-y-8">
+                <!-- GPA Cards -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Current GPA
+                        </h2>
+                        <p id="current-gpa" class="text-4xl font-bold text-primary-600 dark:text-primary-400">0.00</p>
+                    </div>
+                    <div class="mt-4 w-full h-2 bg-primary-200 dark:bg-primary-700 rounded-full overflow-hidden">
+                        <div id="current-gpa-bar" class="h-full bg-primary-600 dark:bg-primary-400 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Potential GPA
+                        </h2>
+                        <p id="potential-gpa" class="text-4xl font-bold text-green-600 dark:text-green-400">0.00</p>
+                    </div>
+                    <div class="mt-4 w-full h-2 bg-green-200 dark:bg-green-700 rounded-full overflow-hidden">
+                        <div id="potential-gpa-bar" class="h-full bg-green-500 rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Error Range Controls -->
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                    <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">Error Range</h2>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Min Error</label>
+                            <input type="number" id="error-min" class="w-full px-3 py-2 rounded border dark:border-gray-600 bg-transparent" value="0" min="0" max="50">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Max Error</label>
+                            <input type="number" id="error-max" class="w-full px-3 py-2 rounded border dark:border-gray-600 bg-transparent" value="3" min="0" max="50">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="setFullMarks()" class="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Full Marks
+                    </button>
+                    <button onclick="setPredictedMarks()" class="flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Predicted Marks
+                    </button>
+                    <button onclick="resetMarks()" class="flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Reset
+                    </button>
+                    <a href="/results" class="flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Results
+                    </a>
+                <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </button>
+                </div>
+            </div>
+
+            <!-- Right column (Table) -->
+            <div class="w-full lg:w-2/3">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+                    <div class="p-6">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="bg-gray-50 dark:bg-gray-700">
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300">Course Code</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300">Course Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300">Course Work</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300">Finals</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="course-table" class="divide-y divide-gray-200 dark:divide-gray-600">
+                                    {% for item in data %}
+                                    <tr class="text-gray-800 dark:text-gray-200" data-max="{{ item.mark.split('/')[1] }}">
+                                        <td class="px-6 py-4">{{ item.code }}</td>
+                                        <td class="px-6 py-4">{{ item.name }}</td>
+                                        <td class="px-6 py-4">
+                                            <input type="number" class="coursework w-20 px-2 py-1 rounded border dark:border-gray-600 bg-transparent" 
+                                                   value="{{ item.mark.split('/')[0] }}" min="0" max="{{ item.mark.split('/')[1] }}">
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <input type="number" class="finals w-20 px-2 py-1 rounded border dark:border-gray-600 bg-transparent" 
+                                                   value="0" min="0" max="{{ '40' if item.mark.split('/')[1] == '60' else '50' }}">
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="total">{{ item.mark.split('/')[0] }}</span>/100
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateTotal(row) {
+            const coursework = parseInt(row.querySelector('.coursework').value) || 0;
+            const finals = parseInt(row.querySelector('.finals').value) || 0;
+            row.querySelector('.total').textContent = coursework + finals;
+        }
+
+        function setFullMarks() {
+            document.querySelectorAll('tbody tr').forEach(row => {
+                const finalsInput = row.querySelector('.finals');
+                finalsInput.value = finalsInput.max;
+                calculateTotal(row);
+            });
+            calculateGPAs();
+        }
+
+        function resetMarks() {
+            document.querySelectorAll('tbody tr').forEach(row => {
+                row.querySelector('.finals').value = 0;
+                calculateTotal(row);
+            });
+            calculateGPAs();
+        }
+
+        function calculateGPAs() {
+            const rows = document.querySelectorAll('tbody tr');
+            const grades = [];
+
+            rows.forEach(row => {
+                const code = row.querySelector('td:first-child').textContent;
+                const coursework = parseInt(row.querySelector('.coursework').value);
+                const finals = parseInt(row.querySelector('.finals').value);
+                const finals_max = parseInt(row.querySelector('.finals').max);
+                const total = coursework + finals;
+                
+                grades.push({ 
+                    code, 
+                    coursework, 
+                    finals,
+                    finals_max,
+                    total 
+                });
+            });
+
+            fetch('/calculate_finals_gpas', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ grades }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateGPADisplay('current-gpa', data.current_gpa);
+                updateGPADisplay('potential-gpa', data.potential_gpa);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function updateGPADisplay(id, value) {
+            const element = document.getElementById(id);
+            const bar = document.getElementById(`${id}-bar`);
+            element.textContent = value;
+            bar.style.width = `${(parseFloat(value) / 4) * 100}%`;
+        }
+
+        function getRandomError() {
+            const minError = parseInt(document.getElementById('error-min').value) || 0;
+            const maxError = parseInt(document.getElementById('error-max').value) || 5;
+            return Math.floor(Math.random() * (maxError - minError + 1)) + minError;
+        }
+
+        function setPredictedMarks() {
+            document.querySelectorAll('tbody tr').forEach(row => {
+                const finalsInput = row.querySelector('.finals');
+                const maxMark = parseInt(finalsInput.max);
+                const error = getRandomError();
+                finalsInput.value = Math.max(0, maxMark - error);
+                calculateTotal(row);
+            });
+            calculateGPAs();
+        }
+
+        // Add event listeners for input changes
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('finals') || e.target.classList.contains('coursework')) {
+                calculateTotal(e.target.closest('tr'));
+                calculateGPAs();
+            }
+        });
+
+        // Theme toggle functionality
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = themeToggleBtn.querySelector('svg');
+
+        function setTheme(isDark) {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                themeToggleIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                `;
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleIcon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                `;
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        themeToggleBtn.addEventListener('click', function() {
+            setTheme(!document.documentElement.classList.contains('dark'));
+        });
+
+        // Initialize theme based on user preference or system setting
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            setTheme(true);
+        } else {
+            setTheme(false);
+        }
+
+        // Initialize GPAs when the page loads
+        window.onload = function() {
+            calculateGPAs();
+        };
+    </script>
+</body>
+</html>

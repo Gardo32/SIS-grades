@@ -426,5 +426,117 @@ def make_session_permanent():
 # Don't forget to add a secret key for session management
 app.secret_key = 'your-secret-key-here'  # Change this to a secure secret key
 
+@app.route('/finals')
+@login_required
+def finals():
+    user_id = session.get('user_id')
+    headers = session.get('headers')
+
+    if not user_id or not headers:
+        return redirect(url_for('index'))
+
+    result = send_payload(user_id, headers)
+
+    if result.startswith("Error") or result.startswith("An error occurred"):
+        return redirect(url_for('index', error=result))
+
+    data = extract_table_data(result)
+    if data:
+        return render_template('finals.html', data=data)
+    else:
+        return redirect(url_for('index', error="No table data found in the response."))
+
+def calculate_finals_gpa(grades_data):
+    """Calculate GPA based on total marks out of 100"""
+    total_marks = 0
+    total_courses = 0
+    for grade in grades_data:
+        try:
+            total = int(grade['total'])
+            if 0 <= total <= 100:  # Validate total is in valid range
+                total_marks += total
+                total_courses += 1
+        except (ValueError, KeyError):
+            continue
+    
+    if total_courses == 0:
+        return 0
+    return total_marks / total_courses
+
+def calculate_finals_current_gpa(grades_data):
+    """Calculate current GPA from finals totals"""
+    total_marks = 0
+    total_courses = 0
+    for grade in grades_data:
+        try:
+            total = int(grade['total'])
+            if 0 <= total <= 100:
+                total_marks += total
+                total_courses += 1
+        except (ValueError, KeyError):
+            continue
+    
+    if total_courses == 0:
+        return 0
+    return total_marks / total_courses
+
+def calculate_finals_predictive_gpa(grades_data, error_min, error_max):
+    """Calculate predictive GPA with error range"""
+    total_marks = 0
+    total_courses = 0
+    for grade in grades_data:
+        try:
+            total = int(grade['total'])
+            if 0 <= total <= 100:
+                error = random.randint(error_min, error_max)
+                adjusted_total = max(0, total - error)
+                total_marks += adjusted_total
+                total_courses += 1
+        except (ValueError, KeyError):
+            continue
+    
+    if total_courses == 0:
+        return 0
+    return total_marks / total_courses
+
+def calculate_finals_potential_gpa(grades_data):
+    """Calculate potential GPA assuming maximum remaining marks"""
+    total_marks = 0
+    total_courses = 0
+    for grade in grades_data:
+        try:
+            coursework = int(grade['coursework'])
+            finals_max = int(grade['finals_max'])
+            total = coursework + finals_max
+            if 0 <= total <= 100:
+                total_marks += total
+                total_courses += 1
+        except (ValueError, KeyError):
+            continue
+    
+    if total_courses == 0:
+        return 0
+    return total_marks / total_courses
+
+@app.route('/calculate_finals_gpas', methods=['POST'])
+@login_required
+def calculate_finals_gpas_route():
+    try:
+        data = request.get_json()
+        error_min = int(data.get('error_min', 0))
+        error_max = int(data.get('error_max', 5))
+        
+        current = calculate_finals_current_gpa(data['grades'])
+        predictive = calculate_finals_predictive_gpa(data['grades'], error_min, error_max)
+        potential = calculate_finals_potential_gpa(data['grades'])
+        
+        return jsonify({
+            'current_gpa': f"{current:.2f}",
+            'predictive_gpa': f"{predictive:.2f}",
+            'potential_gpa': f"{potential:.2f}"
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
 if __name__ == '__main__':
     app.run(debug=True)
